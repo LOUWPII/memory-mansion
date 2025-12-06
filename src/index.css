@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Warm, cozy palette for the mental palace */
+    --background: 35 30% 97%;
+    --foreground: 30 10% 15%;
+
+    --card: 35 25% 95%;
+    --card-foreground: 30 10% 15%;
+
+    --popover: 35 25% 95%;
+    --popover-foreground: 30 10% 15%;
+
+    /* Sage green - calming, focus */
+    --primary: 150 25% 40%;
+    --primary-foreground: 35 30% 97%;
+
+    /* Warm cream */
+    --secondary: 35 35% 90%;
+    --secondary-foreground: 30 10% 25%;
+
+    /* Soft muted tones */
+    --muted: 35 20% 92%;
+    --muted-foreground: 30 10% 45%;
+
+    /* Warm wood accent */
+    --accent: 25 45% 55%;
+    --accent-foreground: 35 30% 97%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 35 30% 97%;
+
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 150 25% 40%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens for mental palace */
+    --palace-glow: 150 40% 70%;
+    --palace-warm: 35 50% 85%;
+    --palace-wood: 25 40% 35%;
+    --palace-shadow: 30 15% 10%;
+    
+    /* Furniture-specific colors */
+    --bed-color: 220 25% 65%;
+    --desk-color: 25 35% 45%;
+    --wardrobe-color: 25 30% 50%;
+    --nightstand-color: 25 25% 55%;
+    --shelf-color: 25 40% 40%;
+    --chair-color: 30 20% 35%;
+
+    /* Gradients */
+    --gradient-glow: radial-gradient(circle, hsl(var(--palace-glow) / 0.3) 0%, transparent 70%);
+    --gradient-warm: linear-gradient(180deg, hsl(var(--palace-warm)) 0%, hsl(var(--background)) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--secondary)) 100%);
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(var(--palace-shadow) / 0.1);
+    --shadow-glow: 0 0 30px hsl(var(--palace-glow) / 0.4);
+    --shadow-float: 0 10px 40px -10px hsl(var(--palace-shadow) / 0.2);
+
+    /* Sidebar - keeping for compatibility */
+    --sidebar-background: 35 25% 95%;
+    --sidebar-foreground: 30 10% 25%;
+    --sidebar-primary: 150 25% 40%;
+    --sidebar-primary-foreground: 35 30% 97%;
+    --sidebar-accent: 35 35% 90%;
+    --sidebar-accent-foreground: 30 10% 25%;
+    --sidebar-border: 35 20% 88%;
+    --sidebar-ring: 150 25% 40%;
+  }
+
+  .dark {
+    --background: 30 15% 8%;
+    --foreground: 35 20% 92%;
+
+    --card: 30 15% 12%;
+    --card-foreground: 35 20% 92%;
+
+    --popover: 30 15% 12%;
+    --popover-foreground: 35 20% 92%;
+
+    --primary: 150 35% 55%;
+    --primary-foreground: 30 15% 8%;
+
+    --secondary: 30 15% 18%;
+    --secondary-foreground: 35 20% 85%;
+
+    --muted: 30 12% 20%;
+    --muted-foreground: 35 15% 60%;
+
+    --accent: 30 40% 45%;
+    --accent-foreground: 35 20% 92%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 35 20% 92%;
+
+    --border: 30 12% 22%;
+    --input: 30 12% 22%;
+    --ring: 150 35% 55%;
+
+    --palace-glow: 150 50% 50%;
+    --palace-warm: 30 30% 25%;
+    --palace-wood: 25 30% 55%;
+    
+    --sidebar-background: 30 15% 10%;
+    --sidebar-foreground: 35 20% 85%;
+    --sidebar-primary: 150 35% 55%;
+    --sidebar-primary-foreground: 30 15% 8%;
+    --sidebar-accent: 30 15% 18%;
+    --sidebar-accent-foreground: 35 20% 85%;
+    --sidebar-border: 30 12% 22%;
+    --sidebar-ring: 150 35% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-lg;
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+
+  .slide-up {
+    animation: slide-up 0.4s ease-out forwards;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px hsl(var(--palace-glow) / 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 40px hsl(var(--palace-glow) / 0.6);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Canvas styling */
+canvas {
+  touch-action: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
