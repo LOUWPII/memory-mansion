@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Upload, File, X } from 'lucide-react';
 
 interface Module {
   title: string;
@@ -18,10 +18,18 @@ interface Module {
   content: string;
 }
 
+interface UploadedFile {
+  name: string;
+  url: string;
+  type: string;
+}
+
 export default function CreateCourse() {
   const navigate = useNavigate();
   const { user, isProfessor } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const syllabusInputRef = useRef<HTMLInputElement>(null);
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -30,6 +38,9 @@ export default function CreateCourse() {
     { title: '', description: '', content: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [syllabusFile, setSyllabusFile] = useState<UploadedFile | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const addModule = () => {
     setModules([...modules, { title: '', description: '', content: '' }]);
@@ -45,6 +56,59 @@ export default function CreateCourse() {
     const updated = [...modules];
     updated[index][field] = value;
     setModules(updated);
+  };
+
+  const uploadFile = async (file: File, type: 'content' | 'syllabus') => {
+    if (!user) return null;
+
+    setIsUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('course-content')
+      .upload(fileName, file);
+
+    setIsUploading(false);
+
+    if (error) {
+      toast({
+        title: 'Error al subir archivo',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('course-content')
+      .getPublicUrl(data.path);
+
+    return {
+      name: file.name,
+      url: urlData.publicUrl,
+      type: file.type,
+    };
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'content' | 'syllabus') => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      const uploaded = await uploadFile(file, type);
+      if (uploaded) {
+        if (type === 'syllabus') {
+          setSyllabusFile(uploaded);
+        } else {
+          setUploadedFiles(prev => [...prev, uploaded]);
+        }
+      }
+    }
+  };
+
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +142,8 @@ export default function CreateCourse() {
         description,
         room_type: roomType,
         professor_id: user?.id,
+        syllabus_url: syllabusFile?.url || null,
+        content_urls: uploadedFiles.map(f => f.url),
       })
       .select()
       .single();
@@ -202,6 +268,103 @@ export default function CreateCourse() {
                       <SelectItem value="lab">Laboratorio</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Content Upload */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif">Contenido del Curso</CardTitle>
+                <CardDescription>
+                  Sube el syllabus y materiales de estudio para la generación del plan de estudio con IA
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Syllabus Upload */}
+                <div className="space-y-2">
+                  <Label>Syllabus del curso</Label>
+                  <input
+                    ref={syllabusInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, 'syllabus')}
+                  />
+                  {syllabusFile ? (
+                    <div className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg">
+                      <File className="w-5 h-5 text-primary" />
+                      <span className="flex-1 text-sm truncate">{syllabusFile.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSyllabusFile(null)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => syllabusInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isUploading ? 'Subiendo...' : 'Subir Syllabus'}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Additional Content Upload */}
+                <div className="space-y-2">
+                  <Label>Materiales adicionales</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(e, 'content')}
+                  />
+                  
+                  {uploadedFiles.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg">
+                          <File className="w-5 h-5 text-muted-foreground" />
+                          <span className="flex-1 text-sm truncate">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeUploadedFile(index)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isUploading ? 'Subiendo...' : 'Agregar Materiales'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
