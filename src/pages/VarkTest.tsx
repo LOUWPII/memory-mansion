@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Brain, Eye, Ear, BookOpen, Hand, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Brain, Eye, Ear, BookOpen, Hand, ChevronRight, ChevronLeft, LogOut } from 'lucide-react';
 
 interface Question {
   id: number;
@@ -357,8 +357,20 @@ export default function VarkTest() {
     );
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background p-4">
+      {/* Logout button */}
+      <div className="absolute top-4 right-4">
+        <Button variant="ghost" size="icon" onClick={handleSignOut} title="Cerrar sesión">
+          <LogOut className="w-5 h-5" />
+        </Button>
+      </div>
+      
       <div className="max-w-2xl mx-auto pt-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
