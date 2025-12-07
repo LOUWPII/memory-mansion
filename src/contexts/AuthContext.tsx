@@ -25,11 +25,13 @@ interface AuthContextType {
   profile: Profile | null;
   roles: UserRole[];
   loading: boolean;
+  rolesLoading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isProfessor: boolean;
   refreshProfile: () => Promise<void>;
+  refreshRoles: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -54,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchRoles = async (userId: string) => {
+    setRolesLoading(true);
     const { data } = await supabase
       .from('user_roles')
       .select('role')
@@ -62,11 +66,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data) {
       setRoles(data as UserRole[]);
     }
+    setRolesLoading(false);
   };
 
   const refreshProfile = async () => {
     if (user) {
       await fetchProfile(user.id);
+    }
+  };
+
+  const refreshRoles = async () => {
+    if (user) {
+      await fetchRoles(user.id);
     }
   };
 
@@ -146,11 +157,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       profile,
       roles,
       loading,
+      rolesLoading,
       signUp,
       signIn,
       signOut,
       isProfessor,
       refreshProfile,
+      refreshRoles,
     }}>
       {children}
     </AuthContext.Provider>
