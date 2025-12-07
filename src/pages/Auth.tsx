@@ -120,7 +120,7 @@ export default function Auth() {
           .eq('user_id', authData.user.id);
         
         // Refresh roles in context before navigating
-        await refreshRoles();
+        await refreshRoles(authData.user.id);
       }
     }
 
