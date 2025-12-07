@@ -39,27 +39,31 @@ const learningStyleLabels = {
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user, profile, signOut, isProfessor, loading, rolesLoading } = useAuth();
+  const { user, profile, signOut, isProfessor, loading, rolesLoading, profileLoading } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Wait for auth to complete
+    if (loading) return;
+    
+    if (!user) {
       navigate('/auth');
       return;
     }
 
-    // Wait for roles to load before checking if student needs VARK test
-    if (!loading && !rolesLoading && user && profile && !profile.test_completed && !isProfessor) {
+    // Wait for roles AND profile to load before making any decision
+    if (rolesLoading || profileLoading) return;
+
+    // Only students who haven't completed the test go to VARK
+    if (!isProfessor && profile && !profile.test_completed) {
       navigate('/vark-test');
       return;
     }
 
-    if (user && !rolesLoading) {
-      fetchData();
-    }
-  }, [user, profile, loading, rolesLoading, navigate, isProfessor]);
+    fetchData();
+  }, [user, profile, loading, rolesLoading, profileLoading, navigate, isProfessor]);
 
   const fetchData = async () => {
     setLoadingCourses(true);

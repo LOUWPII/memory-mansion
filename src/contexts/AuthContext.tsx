@@ -26,6 +26,7 @@ interface AuthContextType {
   roles: UserRole[];
   loading: boolean;
   rolesLoading: boolean;
+  profileLoading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -43,8 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [rolesLoading, setRolesLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
+    setProfileLoading(true);
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -54,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data) {
       setProfile(data as Profile);
     }
+    setProfileLoading(false);
   };
 
   const fetchRoles = async (userId: string) => {
@@ -110,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchRoles(session.user.id);
       } else {
         setRolesLoading(false);
+        setProfileLoading(false);
       }
       setLoading(false);
     });
@@ -161,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       roles,
       loading,
       rolesLoading,
+      profileLoading,
       signUp,
       signIn,
       signOut,
