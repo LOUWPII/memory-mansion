@@ -18,7 +18,7 @@ const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 c
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signUp, user, loading, refreshRoles } = useAuth();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -118,6 +118,9 @@ export default function Auth() {
           .from('user_roles')
           .update({ role: 'professor' })
           .eq('user_id', authData.user.id);
+        
+        // Refresh roles in context before navigating
+        await refreshRoles();
       }
     }
 
