@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import VarkTest from "./pages/VarkTest";
 import BrowseCourses from "./pages/BrowseCourses";
 import CreateCourse from "./pages/CreateCourse";
+import Palace from "./pages/Palace";
+import CourseManage from "./pages/CourseManage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
               <Route path="/vark-test" element={<VarkTest />} />
               <Route path="/browse-courses" element={<BrowseCourses />} />
               <Route path="/create-course" element={<CreateCourse />} />
+              <Route path="/palace/:courseId" element={<Palace />} />
+              <Route path="/course/:courseId" element={<CourseManage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
