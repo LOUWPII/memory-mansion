@@ -204,7 +204,7 @@ const typeDescriptions = {
 
 export default function VarkTest() {
   const navigate = useNavigate();
-  const { user, refreshProfile } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const { toast } = useToast();
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -212,6 +212,20 @@ export default function VarkTest() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<{ visual: number; auditory: number; reading: number; kinesthetic: number } | null>(null);
+
+  // Redirect to auth if not logged in
+  if (!loading && !user) {
+    navigate('/auth');
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const progress = ((Object.keys(answers).length) / varkQuestions.length) * 100;
 
