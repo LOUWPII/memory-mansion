@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Brain, Mail, Lock, User } from 'lucide-react';
+import { Brain, Mail, Lock, User, GraduationCap, BookOpen } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Correo electrónico inválido');
@@ -25,6 +27,7 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupName, setSignupName] = useState('');
+  const [signupRole, setSignupRole] = useState<'student' | 'professor'>('student');
 
   useEffect(() => {
     if (!loading && user) {
@@ -89,7 +92,35 @@ export default function Auth() {
     }
 
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
+    
+    // Sign up with role in metadata
+    const redirectUrl = `${window.location.origin}/`;
+    const { data: authData, error } = await supabase.auth.signUp({
+      email: signupEmail,
+      password: signupPassword,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: signupName,
+          role: signupRole,
+        },
+      },
+    });
+
+    // If signup successful and we have a user, update their role
+    if (!error && authData.user) {
+      // Wait a bit for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update role if professor
+      if (signupRole === 'professor') {
+        await supabase
+          .from('user_roles')
+          .update({ role: 'professor' })
+          .eq('user_id', authData.user.id);
+      }
+    }
+
     setIsLoading(false);
 
     if (error) {
@@ -105,7 +136,7 @@ export default function Auth() {
     } else {
       toast({
         title: '¡Cuenta creada!',
-        description: 'Tu cuenta ha sido creada exitosamente',
+        description: `Tu cuenta de ${signupRole === 'professor' ? 'profesor' : 'estudiante'} ha sido creada exitosamente`,
       });
       navigate('/');
     }
@@ -189,6 +220,45 @@ export default function Auth() {
 
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4 mt-4">
+                  {/* Role Selection */}
+                  <div className="space-y-3">
+                    <Label>¿Cuál es tu rol?</Label>
+                    <RadioGroup
+                      value={signupRole}
+                      onValueChange={(value) => setSignupRole(value as 'student' | 'professor')}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <div>
+                        <RadioGroupItem
+                          value="student"
+                          id="role-student"
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor="role-student"
+                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <GraduationCap className="mb-2 h-6 w-6" />
+                          <span className="text-sm font-medium">Estudiante</span>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem
+                          value="professor"
+                          id="role-professor"
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor="role-professor"
+                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <BookOpen className="mb-2 h-6 w-6" />
+                          <span className="text-sm font-medium">Profesor</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Nombre completo</Label>
                     <div className="relative">
