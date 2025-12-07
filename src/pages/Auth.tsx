@@ -112,12 +112,18 @@ export default function Auth() {
       // Wait a bit for the trigger to create the profile
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Update role if professor
+      // Update role if professor - use upsert to ensure it works
       if (signupRole === 'professor') {
-        await supabase
+        const { error: roleError } = await supabase
           .from('user_roles')
-          .update({ role: 'professor' })
-          .eq('user_id', authData.user.id);
+          .upsert({ 
+            user_id: authData.user.id, 
+            role: 'professor' 
+          }, { 
+            onConflict: 'user_id' 
+          });
+        
+        console.log('Role upsert result:', roleError);
         
         // Refresh roles in context before navigating
         await refreshRoles(authData.user.id);
