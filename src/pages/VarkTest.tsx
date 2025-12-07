@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -214,12 +214,13 @@ export default function VarkTest() {
   const [results, setResults] = useState<{ visual: number; auditory: number; reading: number; kinesthetic: number } | null>(null);
 
   // Redirect to auth if not logged in
-  if (!loading && !user) {
-    navigate('/auth');
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
