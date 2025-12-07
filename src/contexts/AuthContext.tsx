@@ -31,7 +31,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isProfessor: boolean;
   refreshProfile: () => Promise<void>;
-  refreshRoles: () => Promise<void>;
+  refreshRoles: (userId?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,9 +75,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const refreshRoles = async () => {
-    if (user) {
-      await fetchRoles(user.id);
+  const refreshRoles = async (userId?: string) => {
+    const id = userId || user?.id;
+    if (id) {
+      await fetchRoles(id);
     }
   };
 
@@ -107,6 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         fetchProfile(session.user.id);
         fetchRoles(session.user.id);
+      } else {
+        setRolesLoading(false);
       }
       setLoading(false);
     });
